@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define OK_LIB_DEFINE
 #include "ast.h"
 
 static void
@@ -15,15 +16,14 @@ delete(void *this) {
 }
 
 static int
-exec(void *this, symbols_t *symbols, const Value **ret_val) {
-    (void)ret_val;
+exec(void *this, symbols_t *symbols, Value **ret_val) {
     int status = 0;
     ASTCall *ast = this;
     ASTExpression *func = ast->func;
     if (func->super.exec(ast->func, symbols, NULL)) {
         return 1;
     }
-    const Value *fn_val = func->value;
+    Value *fn_val = func->value;
     if (fn_val->type != VAL_FUNC) {
         fprintf(stderr,
                 "error: \"%s\" object is not callable\n",
@@ -44,23 +44,41 @@ exec(void *this, symbols_t *symbols, const Value **ret_val) {
         ok_vec_deinit(&args);
         return status;
     }
-    const Func *fn = fn_val->value.FUNC;
-    if (fn->type == FUNC_BUILTIN) {
-        ast->ret = fn->value.BUILTIN(args);
-        ast->super.value = &ast->ret;
-        if (ret_val) {
-            *ret_val = &ast->ret;
-        }
+    struct Func fn = fn_val->value.FUNC;
+    if (fn.type == FUNC_BUILTIN) {
+        ast->ret = fn.value.BUILTIN(args);
     } else {
-        fprintf(stderr, "error: user-defined functions not implemented\n");
-        return 1;
+        symbols_t new_symbols;
+        ok_map_init(&new_symbols);
+        ok_map_put_all(&new_symbols, symbols);
+
+        ast_v *stmts = fn.value.DEFINED;
+        ok_vec_foreach(stmts, AST *stmt) {
+                stmt->exec(stmt, &new_symbols, NULL);
+            }
+        ok_vec_foreach(fn.globals, char *global) {
+                if (ok_map_contains(&new_symbols, global)) {
+                    Value *val = ok_map_get(&new_symbols, global);
+                    if (ok_map_contains(symbols, global)) {
+                        **ok_map_get_ptr(symbols, global) = *val;
+                    } else {
+                        ok_map_put(symbols, global, val);
+                    }
+                }
+            }
+        ok_map_deinit(&new_symbols);
+        ast->ret = new_Value_none();
+    }
+    ast->super.value = &ast->ret;
+    if (ret_val) {
+        *ret_val = &ast->ret;
     }
     ok_vec_deinit(&args);
     return 0;
 }
 
 ASTExpression *
-new_ASTCall(ASTExpression *func, expr_vec args) {
+new_ASTCall(ASTExpression *func, expr_v args) {
     ASTCall *ast = malloc(sizeof(*ast));
     if (ast == NULL) {
         perror("malloc");

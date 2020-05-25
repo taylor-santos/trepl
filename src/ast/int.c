@@ -10,7 +10,7 @@ delete(void *this) {
 }
 
 static int
-exec(void *this, symbols_t *symbols, const Value **ret_val) {
+exec(void *this, symbols_t *symbols, Value **ret_val) {
     (void)symbols;
     ASTInt *ast = this;
     ast->super.value = &ast->value;
@@ -21,13 +21,13 @@ exec(void *this, symbols_t *symbols, const Value **ret_val) {
 }
 
 static int
-typecmp(const Value *v1, const Value *v2) {
+typecmp(Value *v1, Value *v2) {
     (void)v1;
     return v2->type != VAL_INT;
 }
 
 static int
-fprint(FILE *file, const Value *v) {
+fprint(FILE *file, Value *v) {
     return fprintf(file, "%d", v->value.INT);
 }
 

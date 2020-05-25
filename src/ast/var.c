@@ -11,7 +11,7 @@ delete(void *this) {
 }
 
 static int
-exec(void *this, symbols_t *symbols, const Value **ret_val) {
+exec(void *this, symbols_t *symbols, Value **ret_val) {
     (void)symbols;
     ASTVar *ast = this;
     if (ok_map_contains(symbols, ast->ident)) {

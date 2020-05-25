@@ -902,6 +902,12 @@ OK_LIB_API ok_hash_t ok_str_hash(char *key);
 /// Gets the hash for a string.
 OK_LIB_API ok_hash_t ok_const_str_hash(const char *key);
 
+/// Gets the hash for a pointer.
+OK_LIB_API ok_hash_t ok_ptr_hash(void *key);
+
+/// Gets the hash for a pointer.
+OK_LIB_API ok_hash_t ok_const_ptr_hash(const void *key);
+
 /// Combines two hashes into one.
 OK_LIB_API ok_hash_t ok_hash_combine(ok_hash_t hash_a, ok_hash_t hash_b);
 
