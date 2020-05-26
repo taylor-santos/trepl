@@ -111,12 +111,11 @@ func { return TOK_FUNC; }
     yyset_extra(depth, yyscanner);
     return *yytext;
 }
-[=\-,\(\)\[\]] {
+[=\-,\(\)\[\]:\}] {
     return *yytext;
 }
 . {
     printf("LEX ERROR: '%d' (%c)\n", *yytext, *yytext);
-    return *yytext;
 }
 <<EOF>> {
     return TOK_NEWLINE;

@@ -76,11 +76,19 @@ statements_line
             ok_vec_push(&$$, $1);
         }
     }
+    | error {
+        reset_scanner_indent(scanner);
+        ok_vec_init(&$$);
+    }
     | statements_line ';' statement {
         $$ = $1;
         if ($3) {
             ok_vec_push(&$$, $3);
         }
+    }
+    | statements_line ';' error {
+        reset_scanner_indent(scanner);
+        $$ = $1;
     }
 
 statement
@@ -90,10 +98,6 @@ statement
     }
     | %empty {
         $$ = NULL;
-    }
-    | error {
-        $$ = NULL;
-        reset_scanner_indent(scanner);
     }
 
 assignment
@@ -137,20 +141,17 @@ primary_expression
     | func_def
 
 func_def
-    : TOK_FUNC '(' ')' '{' statements '}' {
-        str_v globals;
-        ok_vec_init(&globals);
-        $$ = new_ASTFunc(globals, $5);
-    }
-    | TOK_FUNC '(' ')' '[' opt_idents_list ']' '{' statements '}' {
-        $$ = new_ASTFunc($5, $8);
+    : TOK_FUNC '(' opt_args ')' opt_idents_list '{' statements '}' {
+        $$ = new_ASTFunc($5, $7);
     }
 
 opt_idents_list
     : %empty {
         ok_vec_init(&$$);
     }
-    | idents_list
+    | '[' idents_list ']' {
+        $$ = $2;
+    }
 
 idents_list
     : TOK_IDENT {
@@ -161,6 +162,20 @@ idents_list
         $$ = $1;
         ok_vec_push(&$$, $3);
     }
+
+opt_args
+    : %empty
+    | args
+
+args
+    : arg
+    | args ',' arg
+
+arg
+    : TOK_IDENT ':' type
+
+type
+    : TOK_IDENT
 
 statements
     : statement {

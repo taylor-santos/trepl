@@ -6,7 +6,7 @@
 #include "scanner.h"
 
 #define NAME "tlang"
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
 
 static int TLANG_QUIT = 0;
 
