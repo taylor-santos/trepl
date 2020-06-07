@@ -6,7 +6,7 @@
 #include "scanner.h"
 
 #define NAME "tlang"
-#define VERSION "0.0.5"
+#define VERSION "0.0.6"
 
 static int TLANG_QUIT = 0;
 
@@ -115,7 +115,9 @@ static struct builtin builtin_types[] = {
 
 static void
 add_builtins(Values *symbols) {
-    for (size_t i = 0; i < sizeof(builtin_funcs) / sizeof(*builtin_funcs); i++) {
+    for (size_t i = 0;
+            i < sizeof(builtin_funcs) / sizeof(*builtin_funcs);
+            i++) {
         type_v args;
         ok_vec_init(&args);
         builtin_funcs[i].value.type = new_func_Type(args);
@@ -123,7 +125,9 @@ add_builtins(Values *symbols) {
         builtin_funcs[i].value.type.init = 1;
         ok_map_put(symbols, builtin_funcs[i].name, &builtin_funcs[i].value);
     }
-    for (size_t i = 0; i < sizeof(builtin_types) / sizeof(*builtin_types); i++) {
+    for (size_t i = 0;
+            i < sizeof(builtin_types) / sizeof(*builtin_types);
+            i++) {
         builtin_types[i].value.type = new_class_Type(builtin_types[i].name);
         builtin_types[i].value.type.init = 1;
         ok_map_put(symbols, builtin_types[i].name, &builtin_types[i].value);

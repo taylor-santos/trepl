@@ -21,7 +21,9 @@ type_check(void *this, ExecState *state, Type **ret_type) {
         return 1;
     }
     if (val->type.init == 0) {
-        fprintf(stderr, "error: name \"%s\" used before initialization\n", ast->ident);
+        fprintf(stderr,
+                "error: name \"%s\" used before initialization\n",
+                ast->ident);
         return 1;
     }
     if (ret_type) {
@@ -35,7 +37,9 @@ check_assign(void *this, Type *type, ExecState *state) {
     ASTVar *ast = this;
     Value *prev = ok_map_get(state->symbols, ast->ident);
     if (prev && prev->type.typecmp(&prev->type, type)) {
-        fprintf(stderr, "error: assigning to variable \"%s\" from type \"", ast->ident);
+        fprintf(stderr,
+                "error: assigning to variable \"%s\" from type \"",
+                ast->ident);
         prev->type.fprint(stderr, &prev->type);
         fprintf(stderr, "\" to incompatible type \"");
         type->fprint(stderr, type);
@@ -72,7 +76,9 @@ assign(void *this, Value *val, ExecState *state) {
     ASTVar *ast = this;
     Value *prev_val = ok_map_get(state->symbols, ast->ident);
     if (prev_val && prev_val->type.typecmp(&prev_val->type, &val->type)) {
-        fprintf(stderr, "error: assigning to variable \"%s\" from type \"", ast->ident);
+        fprintf(stderr,
+                "error: assigning to variable \"%s\" from type \"",
+                ast->ident);
         prev_val->type.fprint(stderr, &prev_val->type);
         fprintf(stderr, "\" to incompatible type \"");
         val->type.fprint(stderr, &val->type);

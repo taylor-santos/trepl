@@ -18,8 +18,8 @@ static int
 type_check(void *this, ExecState *state, Type **ret_type) {
     (void)this;
     (void)state;
-    fprintf(stderr, "Type Def type checker not implemented\n");
-    return 1;
+    ASTTypeDef *ast = this;
+    return ast->super.super.exec(ast, state, NULL);
 }
 
 static int
@@ -34,8 +34,12 @@ exec(void *this, ExecState *state, Value **ret_val) {
             if (prev_val == NULL) {
                 ok_map_put(state->symbols, name, (Value *)&ast->type_def.type);
             } else {
-                if (ast->type_def.type.typecmp(&ast->type_def.type, &prev_val->type)) {
-                    fprintf(stderr, "error: assigning to variable \"%s\" from type \"", name);
+                if (ast->type_def
+                        .type
+                        .typecmp(&ast->type_def.type, &prev_val->type)) {
+                    fprintf(stderr,
+                            "error: assigning to variable \"%s\" from type \"",
+                            name);
                     prev_val->type.fprint(stderr, &prev_val->type);
                     fprintf(stderr, "\" to incompatible type \"");
                     ast->type_def.type.fprint(stderr, &ast->type_def.type);

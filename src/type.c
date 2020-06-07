@@ -18,7 +18,8 @@ object_typecmp(Type *t1, Type *t2) {
 Type
 new_object_Type(char *class_name) {
     return (Type){
-            0, TYPE_OBJECT, .OBJECT= { class_name }, object_fprint, object_typecmp
+            0, TYPE_OBJECT, .OBJECT= { class_name }, object_fprint,
+            object_typecmp
     };
 }
 
@@ -47,7 +48,8 @@ func_typecmp(Type *t1, Type *t2) {
         return 1;
     }
     for (size_t i = 0; i < n1; i++) {
-        Type arg1 = ok_vec_get(&t1->FUNC.args, i), arg2 = ok_vec_get(&t2->FUNC.args, i);
+        Type arg1 = ok_vec_get(&t1->FUNC.args, i),
+                arg2 = ok_vec_get(&t2->FUNC.args, i);
         if (arg1.typecmp(&arg1, &arg2)) {
             return 1;
         }
@@ -120,7 +122,9 @@ VerifyType(Type *type, Values *symbols) {
         case TYPE_OBJECT:
             symbol = ok_map_get(symbols, type->OBJECT.name);
             if (symbol == NULL) {
-                fprintf(stderr, "error: name \"%s\" is not defined\n", type->OBJECT.name);
+                fprintf(stderr,
+                        "error: name \"%s\" is not defined\n",
+                        type->OBJECT.name);
                 return 1;
             }
             if (symbol->type.kind != TYPE_CLASS) {
