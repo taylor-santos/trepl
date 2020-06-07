@@ -43,25 +43,6 @@ exec(void *this, ExecState *state, Value **ret_val) {
         *ret_val = val;
     }
     return 0;
-
-    /*
-    Value *prev_val = ok_map_get(state->symbols, ident);
-    if (prev_val &&
-            prev_val->type.typecmp(&prev_val->type, &val->type)) {
-        fprintf(stderr,
-                "error: assigning to variable \"%s\" from type "
-                "\"",
-                ident);
-        prev_val->type.fprint(stderr, &prev_val->type);
-        fprintf(stderr, "\" to incompatible type \"");
-        val->type.fprint(stderr, &val->type);
-        fprintf(stderr, "\"\n");
-        status = 1;
-    } else {
-        ok_map_put(state->symbols, ident, val);
-    }
-    return status;
-     */
 }
 
 ASTExpression *

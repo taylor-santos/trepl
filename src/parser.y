@@ -113,6 +113,9 @@ statement
     | expression {
         $$ = (AST*)$1;
     }
+    | type_annotation {
+        $$ = (AST*)new_ASTTypeDef($1);
+    }
     | %empty {
         $$ = NULL;
     }

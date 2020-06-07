@@ -2,7 +2,7 @@
 
 static int
 object_fprint(FILE *file, struct Type *t) {
-    return fprintf(file, "%s", t->OBJECT.name);
+    return fprintf(file, "<class %s>", t->OBJECT.name);
 }
 
 static int
@@ -18,8 +18,7 @@ object_typecmp(Type *t1, Type *t2) {
 Type
 new_object_Type(char *class_name) {
     return (Type){
-            0, TYPE_OBJECT, .OBJECT= { class_name }, object_fprint,
-            object_typecmp
+            0, TYPE_OBJECT, .OBJECT= { class_name }, object_fprint, object_typecmp
     };
 }
 
@@ -48,8 +47,7 @@ func_typecmp(Type *t1, Type *t2) {
         return 1;
     }
     for (size_t i = 0; i < n1; i++) {
-        Type arg1 = ok_vec_get(&t1->FUNC.args, i),
-                arg2 = ok_vec_get(&t2->FUNC.args, i);
+        Type arg1 = ok_vec_get(&t1->FUNC.args, i), arg2 = ok_vec_get(&t2->FUNC.args, i);
         if (arg1.typecmp(&arg1, &arg2)) {
             return 1;
         }
@@ -108,26 +106,26 @@ new_none_Type(void) {
 int
 VerifyType(Type *type, Values *symbols) {
     Value *symbol;
-
+    int status = 0;
     switch (type->kind) {
         case TYPE_NONE:
             return 0;
         case TYPE_FUNC:
-            fprintf(stderr, "TODO: Func Verify\n");
-            return 1;
+            ok_vec_foreach_ptr(&type->FUNC.args, Type *arg) {
+                    if (VerifyType(arg, symbols)) {
+                        status = 1;
+                    }
+                }
+            return status;
         case TYPE_OBJECT:
             symbol = ok_map_get(symbols, type->OBJECT.name);
             if (symbol == NULL) {
-                fprintf(stderr,
-                        "error: name \"%s\" is not defined\n",
-                        type->OBJECT.name);
+                fprintf(stderr, "error: name \"%s\" is not defined\n", type->OBJECT.name);
                 return 1;
             }
             if (symbol->type.kind != TYPE_CLASS) {
-                fprintf(stderr,
-                        "error: type \"%s\" is not the name of a valid "
-                        "type",
-                        type->OBJECT.name);
+                fprintf(stderr, "error: type \"%s\" is not the name of a valid "
+                                "type", type->OBJECT.name);
                 return 1;
             }
             return 0;

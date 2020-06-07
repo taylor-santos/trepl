@@ -84,6 +84,13 @@ new_ASTVar(char *ident);
 
 typedef struct {
     ASTExpression super;
+    TA type_def;
+} ASTTypeDef;
+ASTExpression *
+new_ASTTypeDef(TA type_def);
+
+typedef struct {
+    ASTExpression super;
     ta_v args;
     str_v globals;
     ast_v stmts;
