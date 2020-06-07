@@ -10,8 +10,18 @@ delete(void *this) {
 }
 
 static int
-exec(void *this, symbols_t *symbols, Value **ret_val) {
-    (void)symbols;
+type_check(void *this, ExecState *state, Type **ret_type) {
+    (void)state;
+    ASTInt *ast = this;
+    if (ret_type) {
+        *ret_type = &ast->value.type;
+    }
+    return 0;
+}
+
+static int
+exec(void *this, ExecState *state, Value **ret_val) {
+    (void)state;
     ASTInt *ast = this;
     ast->super.value = &ast->value;
     if (ret_val) {
@@ -21,23 +31,18 @@ exec(void *this, symbols_t *symbols, Value **ret_val) {
 }
 
 static int
-typecmp(Value *v1, Value *v2) {
-    (void)v1;
-    return v2->type != VAL_INT;
-}
-
-static int
 fprint(FILE *file, Value *v) {
-    return fprintf(file, "%d", v->value.INT);
+    return fprintf(file, "%d", v->OBJECT.BUILTIN.INT);
 }
 
 Value
 new_Value_int(int value) {
     return (Value){
-            VAL_INT, .value.INT = value,
-            "int",
-            typecmp,
-            fprint
+            new_object_Type("int"), .OBJECT={
+                    OBJ_BUILTIN, .BUILTIN={
+                            BUILTIN_INT, .INT=value
+                    }
+            }, fprint
     };
 }
 
@@ -51,12 +56,10 @@ new_ASTInt(int value) {
     *ast = (ASTInt){
             {
                     {
-                            delete,
-                            exec
-                    },
-                    NULL
-            },
-            new_Value_int(value)
+                            delete, exec, type_check
+                    }, NULL
+            }, new_Value_int(value)
     };
+    ast->value.type.init = 1;
     return (ASTExpression *)ast;
 }

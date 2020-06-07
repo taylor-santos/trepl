@@ -31,6 +31,10 @@ double parse_double(const char *str);
 
 %%
 
+"\\\n" {
+    printf("... ");
+}
+
 <indent>{
     [\n\r] {
         printf("... ");
@@ -54,8 +58,9 @@ double parse_double(const char *str);
 
 [ \t]+
 
-func { return TOK_FUNC; }
-"->" { return TOK_ARROW; }
+func   { return TOK_FUNC; }
+return { return TOK_RETURN; }
+"->"   { return TOK_ARROW; }
 
 ";" {
     return *yytext;

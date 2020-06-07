@@ -6,15 +6,14 @@
 #include "scanner.h"
 
 #define NAME "tlang"
-#define VERSION "0.0.3"
+#define VERSION "0.0.4"
 
 static int TLANG_QUIT = 0;
 
 static struct {
     const char *cmd;
 } cmds[] = {
-        { "help" },
-        { "license" }
+        { "help" }, { "license" }
 };
 
 typedef struct ok_vec_of(AST*) ast_vec;
@@ -34,13 +33,6 @@ print_tlang_info(void) {
 }
 
 static int
-builtin_typecmp(Value *v1, Value *v2) {
-    (void)v1;
-    (void)v2;
-    return 0;
-}
-
-static int
 println_fprint(FILE *file, Value *v) {
     (void)v;
     return fprintf(file, "<built-in func println>");
@@ -52,15 +44,16 @@ quit_fprint(FILE *file, Value *v) {
     return fprintf(file, "<built-in func quit>");
 }
 
-Value
-new_Value_none(void) {
-    return (Value){
-            VAL_NONE,
-            { 0 },
-            "none",
-            NULL,
-            NULL
-    };
+static int
+int_fprint(FILE *file, Value *v) {
+    (void)v;
+    return fprintf(file, "<class 'int'>");
+}
+
+static int
+double_fprint(FILE *file, Value *v) {
+    (void)v;
+    return fprintf(file, "<class 'double'>");
 }
 
 static Value
@@ -79,30 +72,65 @@ quit(value_v values) {
     return new_Value_none();
 }
 
-static struct {
+struct builtin {
     char *name;
     Value value;
-} builtins[] = {
+};
+static struct builtin builtin_funcs[] = {
         {
                 "println", {
-                                   VAL_FUNC, .value.FUNC = {
-                        FUNC_BUILTIN, .value.BUILTIN = println
-                }, "func(...)->none", builtin_typecmp, println_fprint
-                           }
-        },
+                { 0 }, .FUNC = {
+                        FUNC_BUILTIN, .BUILTIN = { println }
+                }, println_fprint
+        }
+        }, {
+                "quit", {
+                        { 0 }, .FUNC = {
+                                FUNC_BUILTIN, .BUILTIN = { quit }
+                        }, quit_fprint
+                }
+        }
+};
+static struct builtin builtin_types[] = {
         {
-                "quit",    {
-                                   VAL_FUNC, .value.FUNC = {
-                        FUNC_BUILTIN, .value.BUILTIN = quit
-                }, "func()->none",    builtin_typecmp, quit_fprint
-                           }
+                "int", {
+                { 0 }, {
+                        {
+                                0
+                        }
+                }, int_fprint
+        }
+        }, {
+                "double", {
+                        {
+                                0
+                        }, {
+                                {
+                                        0
+                                }
+                        }, double_fprint
+                }
         }
 };
 
 static void
-add_builtins(symbols_t *symbols) {
-    for (size_t i = 0; i < sizeof(builtins) / sizeof(*builtins); i++) {
-        ok_map_put(symbols, builtins[i].name, &builtins[i].value);
+add_builtins(Values *symbols) {
+    for (size_t i = 0;
+            i < sizeof(builtin_funcs) / sizeof(*builtin_funcs);
+            i++) {
+        type_v args;
+        ok_vec_init(&args);
+        builtin_funcs[i].value.type = new_func_Type(args);
+        builtin_funcs[i].value.type.FUNC.is_builtin = 1;
+        builtin_funcs[i].value.type.init = 1;
+        ok_map_put(symbols, builtin_funcs[i].name, &builtin_funcs[i].value);
+    }
+    for (size_t i = 0;
+            i < sizeof(builtin_types) / sizeof(*builtin_types);
+            i++) {
+        builtin_types[i].value.type = new_class_Type(builtin_types[i].name);
+        builtin_types[i].value.type.init = 1;
+        ok_map_put(symbols, builtin_types[i].name, &builtin_types[i].value);
     }
 }
 
@@ -110,7 +138,7 @@ void
 startREPL(void) {
     yyscan_t scanner;
     YY_BUFFER_STATE state;
-    symbols_t symbols;
+    Values symbols;
     ast_vec lines;
 
     ok_map_init(&symbols);
@@ -131,13 +159,16 @@ startREPL(void) {
         if (yyparse(scanner, &result)) {
             continue;
         }
+        ExecState execState = {
+                &symbols, NULL
+        };
         ok_vec_foreach(&result, AST *stmt) {
                 if (stmt == NULL) {
                     continue;
                 }
                 Value *ret = NULL;
-                stmt->exec(stmt, &symbols, &ret);
-                if (ret && ret->type != VAL_NONE) {
+                stmt->exec(stmt, &execState, &ret);
+                if (ret && ret->type.kind != TYPE_NONE) {
                     ret->fprint(stdout, ret);
                     fprintf(stdout, "\n");
                 }

@@ -3,63 +3,52 @@
 
 #include <stdio.h>
 
-#define OK_LIB_DECLARE
-#include "ok_lib.h"
+#include "value.h"
 
-struct Value;
+typedef struct Values ok_map_of(const char *, Value*) Values;
+typedef struct Types ok_map_of(const char *, Type*) Types;
+typedef struct ta_v ok_vec_of(TA) ta_v;
 
-typedef struct ok_vec_of(char *) str_v;
-typedef struct ok_map_of(const char *, struct Value*) symbols_t;
+typedef struct {
+    Values *symbols;
+    Value *func;
+} ExecState;
 
 typedef struct {
     void (*delete)(void *this);
-    int (*exec)(void *this, symbols_t *symbols, struct Value **ret_val);
+    int (*exec)(void *this, ExecState *state, Value **ret_val);
+    int (*type_check)(void *this, ExecState *state, Type **ret_type);
 } AST;
-
-typedef struct ast_v ok_vec_of(AST*) ast_v;
-typedef struct value_v ok_vec_of(struct Value*) value_v;
-
-typedef struct Value {
-    enum {
-        VAL_NONE, VAL_INT, VAL_DOUBLE, VAL_FUNC
-    } type;
-    union {
-        int INT;
-        double DOUBLE;
-        struct Func {
-            enum {
-                FUNC_BUILTIN, FUNC_DEFINED
-            } type;
-            str_v *globals;
-
-            union {
-                struct Value (*BUILTIN)(value_v args);
-                struct ast_v *DEFINED;
-            } value;
-        } FUNC;
-    } value;
-    char *name;
-    int (*typecmp)(struct Value *v1, struct Value *v2);
-    int (*fprint)(FILE *file, struct Value *v);
-} Value;
-
-Value
-new_Value_none(void);
 
 typedef struct {
     AST super;
     Value *value;
 } ASTExpression;
 
+typedef struct {
+    ASTExpression super;
+    int (*assign)(void *this, Value *value, ExecState *state);
+    int (*check_assign)(void *this, Type *type, ExecState *state);
+} ASTLValue;
+
+typedef struct ast_v ok_vec_of(AST*) ast_v;
+
 typedef struct ok_vec_of(ASTExpression*) expr_v;
 
 typedef struct {
     AST super;
-    str_v idents;
-    ASTExpression *expr;
-} ASTAssignment;
+    ASTExpression *value;
+} ASTReturn;
 AST *
-new_ASTAssignment(str_v idents, ASTExpression *value);
+new_ASTReturn(ASTExpression *value);
+
+typedef struct {
+    ASTExpression super;
+    ASTLValue *lvalue;
+    ASTExpression *rvalue;
+} ASTAssignment;
+ASTExpression *
+new_ASTAssignment(ASTLValue *lvalue, ASTExpression *rvalue);
 
 typedef struct {
     ASTExpression super;
@@ -87,19 +76,21 @@ ASTExpression *
 new_ASTDouble(double value);
 
 typedef struct {
-    ASTExpression super;
+    ASTLValue super;
     char *ident;
 } ASTVar;
-ASTExpression *
+ASTLValue *
 new_ASTVar(char *ident);
 
 typedef struct {
     ASTExpression super;
+    ta_v args;
     str_v globals;
     ast_v stmts;
     Value value;
+    Type *type;
 } ASTFunc;
 ASTExpression *
-new_ASTFunc(str_v globals, ast_v stmts);
+new_ASTFunc(ta_v args, str_v globals, ast_v stmts);
 
 #endif
