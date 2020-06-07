@@ -12,6 +12,7 @@ typedef struct ta_v ok_vec_of(TA) ta_v;
 typedef struct {
     Values *symbols;
     Value *func;
+    Value *ret;
 } ExecState;
 
 typedef struct {
@@ -37,7 +38,8 @@ typedef struct ok_vec_of(ASTExpression*) expr_v;
 
 typedef struct {
     AST super;
-    ASTExpression *value;
+    ASTExpression *expr;
+    Value value;
 } ASTReturn;
 AST *
 new_ASTReturn(ASTExpression *value);

@@ -32,7 +32,12 @@ func_fprint(FILE *file, struct Type *t) {
             val += type.fprint(file, &type);
             sep = ",";
         }
-    val += fprintf(file, ")>");
+    val += fprintf(file, ")");
+    if (t->FUNC.ret_type != NULL) {
+        val += fprintf(file, "->");
+        val += t->FUNC.ret_type->fprint(file, t->FUNC.ret_type);
+    }
+    val += fprintf(file, ">");
     return val;
 }
 
@@ -58,9 +63,10 @@ func_typecmp(Type *t1, Type *t2) {
 }
 
 Type
-new_func_Type(type_v types) {
+new_func_Type(type_v types, Type *ret_type) {
     return (Type){
-            0, TYPE_FUNC, .FUNC = { types, 0 }, func_fprint, func_typecmp
+            0, TYPE_FUNC, .FUNC = { types, ret_type, 0 }, func_fprint,
+            func_typecmp
     };
 }
 

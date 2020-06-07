@@ -128,11 +128,14 @@ exec(void *this, ExecState *state, Value **ret_val) {
             return status;
         }
         ExecState new_state = {
-                &new_symbols, NULL
+                &new_symbols, fn_val, NULL
         };
         ok_vec_foreach(fn.USER.stmts, AST *stmt) {
                 if (stmt->exec(stmt, &new_state, NULL)) {
                     status = 1;
+                    break;
+                }
+                if (new_state.ret != NULL) {
                     break;
                 }
             }
@@ -149,7 +152,11 @@ exec(void *this, ExecState *state, Value **ret_val) {
                 }
         }
         ok_map_deinit(&new_symbols);
-        ast->ret = new_Value_none();
+        if (new_state.ret != NULL) {
+            ast->ret = *new_state.ret;
+        } else {
+            ast->ret = new_Value_none();
+        }
     }
     ast->super.value = &ast->ret;
     if (ret_val) {

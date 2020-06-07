@@ -15,6 +15,7 @@ typedef struct Type {
         } OBJECT;
         struct {
             type_v args;
+            struct Type *ret_type;
             unsigned char is_builtin: 1;
         } FUNC;
         struct {
@@ -34,7 +35,7 @@ Type
 new_object_Type(char *class_name);
 
 Type
-new_func_Type(type_v types);
+new_func_Type(type_v types, Type *ret_type);
 
 Type
 new_class_Type(char *name);

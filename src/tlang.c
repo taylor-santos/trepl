@@ -6,7 +6,7 @@
 #include "scanner.h"
 
 #define NAME "tlang"
-#define VERSION "0.0.6"
+#define VERSION "0.0.7"
 
 static int TLANG_QUIT = 0;
 
@@ -120,7 +120,7 @@ add_builtins(Values *symbols) {
             i++) {
         type_v args;
         ok_vec_init(&args);
-        builtin_funcs[i].value.type = new_func_Type(args);
+        builtin_funcs[i].value.type = new_func_Type(args, NULL);
         builtin_funcs[i].value.type.FUNC.is_builtin = 1;
         builtin_funcs[i].value.type.init = 1;
         ok_map_put(symbols, builtin_funcs[i].name, &builtin_funcs[i].value);

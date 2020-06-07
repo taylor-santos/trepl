@@ -37,6 +37,7 @@
     ASTLValue *lval;
     str_v str_v;
     Type type;
+    Type *type_p;
     type_v type_v;
     TA ta;
     ta_v ta_v;
@@ -69,6 +70,7 @@
 %type<str_v>  opt_idents_list
               idents_list
 %type<type>   type
+%type<type_p> opt_ret_type
 %type<ta_v>   opt_args
               args
 %type<ta>     type_annotation
@@ -214,8 +216,17 @@ type
     : TOK_IDENT {
         $$ = new_object_Type($1);
     }
-    | TOK_FUNC '(' opt_types ')' {
-        $$ = new_func_Type($3);
+    | TOK_FUNC '(' opt_types ')' opt_ret_type {
+        $$ = new_func_Type($3, $5);
+    }
+
+opt_ret_type
+    : %empty {
+        $$ = NULL;
+    }
+    | TOK_ARROW type {
+        $$ = malloc(sizeof(Type));
+        memcpy($$, &$2, sizeof(Type));
     }
 
 opt_types

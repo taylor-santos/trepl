@@ -47,6 +47,10 @@ fprint(FILE *file, Value *v) {
             }
         val += fprintf(file, "]");
     }
+    if (v->type.FUNC.ret_type != NULL) {
+        val += fprintf(file, "->");
+        val += v->type.FUNC.ret_type->fprint(file, v->type.FUNC.ret_type);
+    }
     val += fprintf(file, ">");
     return val;
 }
@@ -63,7 +67,7 @@ new_Value_func(ta_v *args, str_v *globals, ast_v *stmts) {
         }
 
     return (Value){
-            new_func_Type(types), .FUNC = {
+            new_func_Type(types, NULL), .FUNC = {
                     FUNC_USER, args, globals, .USER = {
                             stmts
                     }
@@ -96,8 +100,8 @@ type_check(void *this, ExecState *state, Type **ret_type) {
             Value *val = ok_map_get(state->symbols, global);
             ok_map_put(&new_map, global, val);
         }
-    type_v argTypes;
-    ok_vec_init(&argTypes);
+    //type_v argTypes;
+    //ok_vec_init(&argTypes);
     ok_vec_foreach_ptr(&ast->args, TA *arg) {
             if (VerifyType(&arg->type, state->symbols)) {
                 status = 1;
@@ -105,17 +109,17 @@ type_check(void *this, ExecState *state, Type **ret_type) {
             }
             arg->type.init = 1;
             put_arg(arg, &new_map);
-            size_t count = ok_vec_count(&arg->names);
-            for (size_t i = 0; i < count; i++) {
-                ok_vec_push(&argTypes, arg->type);
-            }
+            //size_t count = ok_vec_count(&arg->names);
+            //for (size_t i = 0; i < count; i++) {
+            //    ok_vec_push(&argTypes, arg->type);
+            //}
         }
     if (status) {
         ok_map_deinit(&new_map);
         return 1;
     }
     ExecState newState = {
-            &new_map, &ast->value
+            &new_map, &ast->value, NULL
     };
     ok_vec_foreach(&ast->stmts, AST *stmt) {
             if (stmt->type_check(stmt, &newState, NULL)) {
@@ -157,7 +161,7 @@ exec(void *this, ExecState *state, Value **ret_val) {
     if (status) {
         return 1;
     }
-    ast->value = new_Value_func(&ast->args, &ast->globals, &ast->stmts);
+    //ast->value = new_Value_func(&ast->args, &ast->globals, &ast->stmts);
 
     ast->value.type.init = 1;
 
